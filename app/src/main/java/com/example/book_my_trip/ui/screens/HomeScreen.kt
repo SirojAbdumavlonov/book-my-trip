@@ -1,5 +1,7 @@
 package com.example.book_my_trip.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,58 +21,37 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.book_my_trip.R
 import com.example.book_my_trip.Screen
 import com.example.book_my_trip.data.model.Destination
-import com.example.book_my_trip.data.model.Flight
 import com.example.book_my_trip.ui.components.*
 import com.example.book_my_trip.ui.theme.Primary
 import com.example.book_my_trip.ui.theme.TextSecondary
+import com.example.book_my_trip.viewmodel.FlightViewModel
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
+    flightViewModel: FlightViewModel = viewModel(factory = FlightViewModel.Factory),
     modifier: Modifier = Modifier
 ) {
     var searchText by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Sample data
-    val popularFlights = remember {
-        listOf(
-            Flight(
-                id = "FL-123",
-                airlineName = "Emirates Airlines",
-                departureTime = "10:40",
-                departureAirport = "JFK",
-                departureCity = "New York",
-                arrivalTime = "14:20",
-                arrivalAirport = "LHR",
-                arrivalCity = "London",
-                price = "$440",
-                duration = "7h 40m",
-                airlineLogoRes = R.drawable.london
-            ),
-            Flight(
-                id = "FL-456",
-                airlineName = "Singapore Airlines",
-                departureTime = "13:15",
-                departureAirport = "SIN",
-                departureCity = "Singapore",
-                arrivalTime = "17:30",
-                arrivalAirport = "SYD",
-                arrivalCity = "Sydney",
-                price = "$510",
-                duration = "8h 15m",
-                airlineLogoRes = R.drawable.singapore
-            )
-        )
+    // Get sample flights from the ViewModel instead of hardcoding them
+    val popularFlights by flightViewModel.popularFlights.collectAsState()
+
+    // Initialize search results if empty
+    LaunchedEffect(Unit) {
     }
 
+    // Sample destinations data
     val popularDestinations = remember {
         listOf(
             Destination(
@@ -295,23 +276,23 @@ fun HomeScreen(
                     )
                 }
 
-                // List of flights
-                items(popularFlights) { flight ->
+                // List of flights - now using data from ViewModel
+                items(popularFlights.take(2)) { flight -> // Taking only 2 for popular flights section
                     FlightCard(
-                        airlineName = flight.airlineName,
+                        airlineName = flight.airline ?: "Airline",
                         departureTime = flight.departureTime,
-                        departureAirport = flight.departureAirport,
+                        departureAirport = flight.departureCode,
                         arrivalTime = flight.arrivalTime,
-                        arrivalAirport = flight.arrivalAirport,
-                        price = flight.price,
-                        duration = flight.duration,
-                        airlineLogoRes = flight.airlineLogoRes,
+                        arrivalAirport = flight.arrivalCode,
+                        price = "$${flight.price}",
+                        duration = "2:30m",
+                        airlineLogoRes = flight.airlineLogoRes ?: R.drawable.default_airline_logo,
                         onClick = {
                             // Navigate to flight details
                             scope.launch {
                                 snackbarHostState.showSnackbar("Flight selected: ${flight.id}")
                             }
-                        }
+                        },
                     )
                 }
 

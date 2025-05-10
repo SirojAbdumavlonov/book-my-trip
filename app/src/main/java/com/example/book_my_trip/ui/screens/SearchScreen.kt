@@ -1,8 +1,10 @@
 package com.example.book_my_trip.ui.screens
 
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.book_my_trip.R
-import com.example.book_my_trip.data.model.Flight
 import com.example.book_my_trip.ui.components.*
 import com.example.book_my_trip.ui.theme.*
+import com.example.book_my_trip.viewmodel.FlightViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
@@ -32,10 +34,12 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     navController: NavController,
+    flightViewModel: FlightViewModel = viewModel(factory = FlightViewModel.Factory),
     modifier: Modifier = Modifier
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -61,50 +65,8 @@ fun SearchScreen(
     // State for search results
     var showResults by remember { mutableStateOf(false) }
 
-    // Sample search results
-    val searchResults = remember {
-        listOf(
-            Flight(
-                id = "FL-123",
-                airlineName = "Emirates Airlines",
-                departureTime = "10:40",
-                departureAirport = "JFK",
-                departureCity = "New York",
-                arrivalTime = "14:20",
-                arrivalAirport = "LHR",
-                arrivalCity = "London",
-                price = "$440",
-                duration = "7h 40m",
-                airlineLogoRes = R.drawable.london
-            ),
-            Flight(
-                id = "FL-456",
-                airlineName = "British Airways",
-                departureTime = "13:15",
-                departureAirport = "JFK",
-                departureCity = "New York",
-                arrivalTime = "17:30",
-                arrivalAirport = "LHR",
-                arrivalCity = "London",
-                price = "$510",
-                duration = "8h 15m",
-                airlineLogoRes = R.drawable.london
-            ),
-            Flight(
-                id = "FL-789",
-                airlineName = "Virgin Atlantic",
-                departureTime = "19:50",
-                departureAirport = "JFK",
-                departureCity = "New York",
-                arrivalTime = "23:55",
-                arrivalAirport = "LHR",
-                arrivalCity = "London",
-                price = "$390",
-                duration = "8h 05m",
-                airlineLogoRes = R.drawable.london
-            )
-        )
-    }
+    // Get search results from ViewModel
+    val searchResults by flightViewModel.searchResults.collectAsState()
 
     // Text recognition for passport scanning - using DisposableEffect for proper lifecycle
     val textRecognizer = remember {
@@ -398,20 +360,25 @@ fun SearchScreen(
 
                 items(searchResults) { flight ->
                     FlightCard(
-                        airlineName = flight.airlineName,
+                        airlineName = flight.airline.toString(),
                         departureTime = flight.departureTime,
-                        departureAirport = flight.departureAirport,
+                        departureAirport = flight.departureCode,
                         arrivalTime = flight.arrivalTime,
-                        arrivalAirport = flight.arrivalAirport,
-                        price = flight.price,
-                        duration = flight.duration,
+                        arrivalAirport = flight.arrivalCode,
+                        price = flight.price.toString(),
+                        duration = flight.departureTime,
                         airlineLogoRes = flight.airlineLogoRes,
                         onClick = {
-                            // Navigate to flight details screen
+                            // Add the selected flight to My Tickets
+                            flightViewModel.addToMyTickets(flight.id)
+
+                            // Show a confirmation message
                             scope.launch {
-                                snackbarHostState.showSnackbar("Selected flight: ${flight.id}")
-                                // In a real app: navController.navigate("flight_details/${flight.id}")
+                                snackbarHostState.showSnackbar("Flight added to My Tickets!")
                             }
+
+                            // Navigate to tickets screen (optional)
+                             navController.navigate("my_ticket")
                         }
                     )
                 }

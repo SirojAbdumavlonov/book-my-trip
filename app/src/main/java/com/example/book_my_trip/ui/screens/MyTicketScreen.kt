@@ -1,5 +1,7 @@
 package com.example.book_my_trip.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,60 +15,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.book_my_trip.R
-import com.example.book_my_trip.data.model.Ticket
 import com.example.book_my_trip.ui.components.TicketCard
 import com.example.book_my_trip.ui.components.TiniBottomNavigation
 import com.example.book_my_trip.ui.theme.Primary
 import com.example.book_my_trip.ui.theme.TextSecondary
+import com.example.book_my_trip.viewmodel.FlightViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyTicketScreen(
     navController: NavController,
-    modifier: Modifier = Modifier
+    flightViewModel: FlightViewModel = viewModel(factory = FlightViewModel.Factory),
+    navigateBack: () -> Unit
 ) {
-    val tickets = remember {
-        listOf(
-            Ticket(
-                id = "TK-123456",
-                airlineName = "Emirates Airlines",
-                flightNumber = "EA-2342",
-                departureTime = "10:40",
-                departureDate = "May 15, 2025",
-                departureAirport = "JFK",
-                departureCity = "New York",
-                arrivalTime = "14:20",
-                arrivalDate = "May 15, 2025",
-                arrivalAirport = "LHR",
-                arrivalCity = "London",
-                passengerName = "John Doe",
-                seatNumber = "21A",
-                airlineLogoRes = R.drawable.london
-            ),
-            Ticket(
-                id = "TK-789012",
-                airlineName = "Singapore Airlines",
-                flightNumber = "SA-4521",
-                departureTime = "21:30",
-                departureDate = "June 2, 2025",
-                departureAirport = "SIN",
-                departureCity = "Singapore",
-                arrivalTime = "05:15",
-                arrivalDate = "June 3, 2025",
-                arrivalAirport = "SYD",
-                arrivalCity = "Sydney",
-                passengerName = "John Doe",
-                seatNumber = "14C",
-                airlineLogoRes = R.drawable.singapore
-            )
-        )
-    }
-
+    val myTickets by flightViewModel.myTickets.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -79,20 +46,17 @@ fun MyTicketScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
-                },navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigateUp()
-                    }) {
+                },
+                navigationIcon = {
+                    IconButton(onClick = navigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-
                 actions = {
                     IconButton(onClick = {
-                        // Launch barcode scanner using ML Kit
                         scope.launch {
                             snackbarHostState.showSnackbar("QR Code scanner would launch here")
                         }
@@ -116,7 +80,8 @@ fun MyTicketScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (tickets.isEmpty()) {
+            if (myTickets.isEmpty()) {
+                println(myTickets)
                 NoTicketsView(
                     modifier = Modifier.align(Alignment.Center)
                 )
@@ -128,25 +93,31 @@ fun MyTicketScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
-                    items(tickets) { ticket ->
+                    items(myTickets) { flight ->
                         TicketCard(
-                            airlineName = ticket.airlineName,
-                            flightNumber = ticket.flightNumber,
-                            departureTime = ticket.departureTime,
-                            departureDate = ticket.departureDate,
-                            departureAirport = ticket.departureAirport,
-                            departureCity = ticket.departureCity,
-                            arrivalTime = ticket.arrivalTime,
-                            arrivalDate = ticket.arrivalDate,
-                            arrivalAirport = ticket.arrivalAirport,
-                            arrivalCity = ticket.arrivalCity,
-                            passengerName = ticket.passengerName,
-                            seatNumber = ticket.seatNumber,
-                            airlineLogoRes = ticket.airlineLogoRes,
+                            airlineName = flight.airline ?: "Airline",
+                            flightNumber = flight.flightNumber,
+                            departureTime = flight.departureTime,
+                            departureDate = flight.departureDate,
+                            departureAirport = flight.departureCode,
+                            departureCity = flight.departureCity,
+                            arrivalTime = flight.arrivalTime,
+                            arrivalDate = flight.arrivalDate,
+                            arrivalAirport = flight.arrivalCode,
+                            arrivalCity = flight.arrivalCity,
+                            passengerName = flight.passengerName ?: "Passenger",
+                            seatNumber = flight.seatNumber ?: "TBD",
+                            airlineLogoRes = flight.airlineLogoRes ?: 0,
                             onClick = {
                                 // Navigate to ticket details
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Viewing ticket details for ${ticket.id}")
+                                    snackbarHostState.showSnackbar("Viewing ticket details for ${flight.id}")
+                                }
+                            },
+                            onCancelClick = {
+                                flightViewModel.removeFromMyTickets(flight.id)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Ticket cancelled successfully")
                                 }
                             }
                         )
