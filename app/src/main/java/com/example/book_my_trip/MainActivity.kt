@@ -15,6 +15,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.book_my_trip.ui.screens.HomeScreen
 import com.example.book_my_trip.ui.screens.MyTicketScreen
 import com.example.book_my_trip.ui.screens.SearchScreen
+import com.example.book_my_trip.ui.screens.auth.SignInScreen
+import com.example.book_my_trip.ui.screens.auth.SignUpScreen
 import com.example.book_my_trip.ui.theme.TiniFlightBookingTheme
 
 class MainActivity : ComponentActivity() {
@@ -44,8 +46,14 @@ fun TiniApp() {
 fun TiniNavHost(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.SignIn.route
     ) {
+        composable(Screen.SignIn.route) {
+            SignInScreen(navController = navController)
+        }
+        composable(Screen.SignUp.route) {
+            SignUpScreen(navController = navController)
+        }
         composable(Screen.Home.route) {
             HomeScreen(navController = navController)
         }
@@ -58,8 +66,4 @@ fun TiniNavHost(navController: NavHostController) {
     }
 }
 
-sealed class Screen(val route: String) {
-    object Home : Screen("home")
-    object Search : Screen("search")
-    object MyTicket : Screen("my_ticket")
-}
+// Screen class moved to Navigation.kt

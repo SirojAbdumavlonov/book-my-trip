@@ -50,6 +50,11 @@ dependencies {
     implementation(libs.barcode.scanning)
     implementation(libs.text.recognition)
 
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

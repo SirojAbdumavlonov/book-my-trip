@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.*
@@ -16,6 +17,7 @@ import androidx.navigation.NavController
 import com.example.book_my_trip.R
 import com.example.book_my_trip.data.model.Ticket
 import com.example.book_my_trip.ui.components.TicketCard
+import com.example.book_my_trip.ui.components.TiniBottomNavigation
 import com.example.book_my_trip.ui.theme.Primary
 import com.example.book_my_trip.ui.theme.TextSecondary
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -44,7 +46,7 @@ fun MyTicketScreen(
                 arrivalCity = "London",
                 passengerName = "John Doe",
                 seatNumber = "21A",
-                airlineLogoRes = R.drawable.ic_launcher_background
+                airlineLogoRes = R.drawable.london
             ),
             Ticket(
                 id = "TK-789012",
@@ -60,7 +62,7 @@ fun MyTicketScreen(
                 arrivalCity = "Sydney",
                 passengerName = "John Doe",
                 seatNumber = "14C",
-                airlineLogoRes = R.drawable.ic_launcher_background
+                airlineLogoRes = R.drawable.singapore
             )
         )
     }
@@ -77,7 +79,17 @@ fun MyTicketScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
+                },navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigateUp()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
                 },
+
                 actions = {
                     IconButton(onClick = {
                         // Launch barcode scanner using ML Kit
@@ -93,6 +105,9 @@ fun MyTicketScreen(
                     }
                 }
             )
+        },
+        bottomBar = {
+            TiniBottomNavigation(navController = navController)
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->

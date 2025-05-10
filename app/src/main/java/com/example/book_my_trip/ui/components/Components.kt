@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -403,7 +402,9 @@ fun TiniTextField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
-    leadingIcon: ImageVector? = null
+    leadingIcon: ImageVector? = null,
+    isError: Boolean,
+    errorMessage: String?
 ) {
     Column(modifier = modifier) {
         Text(
